@@ -1,9 +1,9 @@
 import {
-    OutgoingHttpHeader,
-    OutgoingHttpHeaders,
+    type OutgoingHttpHeader,
+    type OutgoingHttpHeaders,
     type IncomingHttpHeaders,
 } from "node:http";
-import { Failure, Success } from "./result.ts";
+import { type Failure, type Success } from "./result.ts";
 
 export const responseCodes = {
     ok: 200,

@@ -1,30 +1,34 @@
 import { createServer } from "node:http";
 import { URL } from "node:url";
-import { Result } from "./result.ts";
-import { Method, responseCodes } from "./response.ts";
-import { Request, Response } from "./response.ts";
+import { type Result } from "./result.ts";
+import {
+    type Request,
+    type Response,
+    type ErrorResponse,
+    type Method,
+    responseCodes,
+} from "./response.ts";
 
-export * from "./response";
-export * from "./result";
+export * from "./response.ts";
+export * from "./result.ts";
 
 // Default middlewares
 export const json: MiddlewareHandler = async (req, next) => {
     return {
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "content-type": "application/json" },
         ...(await next(req)),
     };
 };
 
-export type Handler = (
-    req: Request
-) => Result<Response, Error> | Promise<Result<Response, Error>>;
+export type ResponseResult = Result<Response, ErrorResponse>;
+export type AsyncResponseResult = ResponseResult | Promise<ResponseResult>;
+
+export type Handler = (req: Request) => AsyncResponseResult;
 
 export type MiddlewareHandler = (
     req: Request,
     next: Handler
-) => Result<Response, Error> | Promise<Result<Response, Error>>;
+) => AsyncResponseResult;
 
 class Server {
     private readonly routes: Record<string, Record<Method, Handler>> = {};
@@ -123,7 +127,19 @@ class Server {
                       }));
 
                 const { error, data } = response;
-                if (error) throw error;
+                if (error) {
+                    res.writeHead(
+                        error.status ?? responseCodes.internalServerError,
+                        {
+                            "Content-Type": "application/json",
+                        }
+                    );
+                    res.end(
+                        JSON.stringify(error.body ?? { error: error.message })
+                    );
+                    return;
+                }
+
                 const { status, body, headers: resHeaders } = data || {};
 
                 res.writeHead(
