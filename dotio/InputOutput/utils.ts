@@ -1,58 +1,15 @@
-import {
-    type OutgoingHttpHeader,
-    type OutgoingHttpHeaders,
-    type IncomingHttpHeaders,
-} from "node:http";
-import { type Failure, type Success } from "./result.ts";
+import { type Failure, type Success } from "../ErrorHandling/index.ts";
+import { type ResponseCode, responseCodes } from "../Routes/index.ts";
+import { type ErrorResponse, type Response } from "./index.ts";
 
-export const responseCodes = {
-    ok: 200,
-    created: 201,
-    accepted: 202,
-    noContent: 204,
-    movedPermanently: 301,
-    found: 302,
-    notModified: 304,
-    badRequest: 400,
-    unauthorized: 401,
-    forbidden: 403,
-    notFound: 404,
-    methodNotAllowed: 405,
-    internalServerError: 500,
-    notImplemented: 501,
-    badGateway: 502,
-    serviceUnavailable: 503,
-    gatewayTimeout: 504,
-} as const;
+// Utility function to create a response object
 
-export type ResponseCode = (typeof responseCodes)[keyof typeof responseCodes];
-
-export type Response = {
-    status?: ResponseCode;
-    body?: unknown;
-    headers?: IncomingHttpHeaders;
-};
-
-export type ErrorResponse = Error & Response;
-
-export const methods = {
-    get: "GET",
-    post: "POST",
-    put: "PUT",
-    patch: "PATCH",
-    delete: "DELETE",
-} as const;
-
-export type Method = (typeof methods)[keyof typeof methods];
-
-export type Request = {
-    method: Method;
-    pathname: string;
-    body: unknown;
-    headers: OutgoingHttpHeaders | OutgoingHttpHeader[];
-    params: URLSearchParams;
-};
-
+/**
+ * Utility function to create a success (positive/neutral) response object
+ * @param data - The response data or string message
+ * @param status - The HTTP status code
+ * @return A success response object
+ */
 export const good = (
     data: Response | string,
     status: ResponseCode
@@ -69,22 +26,28 @@ export const good = (
     };
 };
 
+/**
+ * Utility function to create a failure (negative) response object
+ * @param error - The error object or string message
+ * @param status - The HTTP status code
+ * @returns A failure response object
+ */
 export const bad = (
     error: ErrorResponse | string,
     status: ResponseCode
 ): Failure<ErrorResponse> => {
-    if (typeof error === "string") {
-        return {
-            data: null,
-            error: { status, ...new Error(error) },
-        };
-    }
     return {
         data: null,
-        error: { status: responseCodes.ok, ...error },
+        error: {
+            status,
+            ...(typeof error === "string" ? { message: error } : error),
+        },
     };
 };
 
+// Utility functions to create specific response objects
+
+// Utility functions to positive/neutral specific response objects
 export const ok = (data: Response | string): Success<Response> => {
     return good(data, responseCodes.ok);
 };
@@ -109,6 +72,7 @@ export const notModified = (data: Response | string): Success<Response> => {
     return good(data, responseCodes.notModified);
 };
 
+// Utility functions to negative specific response objects
 export const badRequest = (
     error: ErrorResponse | string
 ): Failure<ErrorResponse> => {

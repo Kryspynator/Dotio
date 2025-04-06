@@ -1,14 +1,4 @@
-export type Success<T> = {
-    data: T | void;
-    error: null;
-};
-
-export type Failure<E> = {
-    data: null;
-    error: E;
-};
-
-export type Result<T, E = Error> = Success<T> | Failure<E>;
+import { type Failure, type Success } from "./types.ts";
 
 export const success = <T>(data: T | void): Success<T> => {
     return { data: data, error: null };
