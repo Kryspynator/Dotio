@@ -69,12 +69,7 @@ export class Server {
         data: Response | void
     ) {
         const { status, body, headers } = data ?? {};
-
-        res.writeHead(
-            status ?? responseCodes.ok,
-            undefined,
-            headers ?? { "Content-Type": "application/json" }
-        );
+        res.writeHead(status ?? responseCodes.ok, undefined, headers ?? {});
         res.end(JSON.stringify(body));
     }
 
@@ -117,8 +112,6 @@ export class Server {
                 return routeParams;
             })();
 
-            console.log("Route Params:", routeParams);
-
             const middlewares = this.middlewares.filter((middleware) => {
                 if (typeof middleware.paths === "string") {
                     return matchPaths(middleware.paths, pathname);
@@ -131,8 +124,6 @@ export class Server {
                 }
                 return false;
             });
-
-            console.log("Middlewares:", middlewares);
 
             const request: Request = {
                 method: method as Method,

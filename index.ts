@@ -1,16 +1,31 @@
-import { badRequest, create, methods, ok } from "./dotio/index.ts";
+import {
+    badRequest,
+    create,
+    jsonInput,
+    jsonOutput,
+    methods,
+    ok,
+} from "./dotio/index.ts";
 
 const server = create();
 
-server.use((req, next) => {
+server.use(jsonOutput);
+server.use(jsonInput);
+
+server.use(async (req, next) => {
     console.log("Request received:", req.method, req.pathname);
+    await new Promise<void>((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, 1000);
+    });
     return next(req);
 });
 
 server.use(async (req, next) => {
     const result = await next(req);
     if (result.error) {
-        console.error("Error:", result.error);
+        console.error("An Error Occurred:", result.error);
     }
     return result;
 });
@@ -27,7 +42,7 @@ server.add(
         if (!lastName) {
             return badRequest("Last name is required");
         }
-        return ok(`Hello, ${firstName} ${lastName}!`);
+        return ok({ body: { message: `Hello, ${firstName} ${lastName}!` } });
     }
 );
 
